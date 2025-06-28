@@ -12,7 +12,7 @@ import chardet
 from django.conf import settings
 
 
-model = SentenceTransformer('stsb-roberta-large')
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
 
 def extract_text(file_path):
