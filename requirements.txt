@@ -18,6 +18,6 @@ chardet>=5.2.0
 gunicorn>=21.2.0
 
 # Optional: If you re-enable PDF support later
-# PyMuPDF==1.22.5
+PyMuPDF==1.22.5
 
 # Render-compatible if using Python 3.10+
