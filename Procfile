@@ -1,1 +1,1 @@
-web: gunicorn backend.wsgi --workers=1 --timeout 120
+web: gunicorn backend.wsgi:application --bind 0.0.0.0:8000 --workers=1
