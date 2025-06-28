@@ -5,21 +5,21 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 import os
-#import fitz
+import fitz
 import docx
 from sentence_transformers import SentenceTransformer, util
 import chardet
 from django.conf import settings
 
 
-model = SentenceTransformer('D:\Project\stsb-roberta-large1')
+model = SentenceTransformer('stsb-roberta-large')
 
 
 def extract_text(file_path):
     try:
-        """if file_path.endswith(".pdf"):
+        if file_path.endswith(".pdf"):
             doc = fitz.open(file_path)
-            return "\n".join(page.get_text("text") for page in doc)"""
+            return "\n".join(page.get_text("text") for page in doc)
         if file_path.endswith(".docx"):
             doc = docx.Document(file_path)
             return "\n".join(para.text for para in doc.paragraphs)
