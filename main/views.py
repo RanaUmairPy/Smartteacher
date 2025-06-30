@@ -72,16 +72,17 @@ def evaluate_submission(student_text, correct_embedding, min_words, required_key
 def literal_similarity(text1, text2):
     return SequenceMatcher(None, text1, text2).ratio()
 
-def check_plagiarism_literal(raw_texts, submission_id_to_student, threshold=0.8):
+def check_plagiarism(student_embeddings, submission_id_to_student):
     plagiarism_results = []
-    student_files = list(raw_texts.keys())
+    student_files = list(student_embeddings.keys())
     for i, file1 in enumerate(student_files):
         for file2 in student_files[i + 1:]:
-            sim = literal_similarity(raw_texts[file1], raw_texts[file2])
-            if sim > threshold:
-                student1 = submission_id_to_student.get(file1, "Unknown")
-                student2 = submission_id_to_student.get(file2, "Unknown")
-                plagiarism_results.append((student1, student2, round(sim * 100, 2)))
+            # student_embeddings here should now be raw text, not embeddings
+            sim = literal_similarity(student_embeddings[file1], student_embeddings[file2])
+            if sim > 0.80:
+                student1_name = submission_id_to_student.get(file1, "Unknown")
+                student2_name = submission_id_to_student.get(file2, "Unknown")
+                plagiarism_results.append((student1_name, student2_name, round(sim * 100, 2)))
     return plagiarism_results
 
 class ClassRoomViewSet(viewsets.ModelViewSet):
