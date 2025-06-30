@@ -12,7 +12,7 @@ import chardet
 from django.conf import settings
 from difflib import SequenceMatcher
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer('stsb-roberta-large')
 
 
 def extract_text(file_path):
