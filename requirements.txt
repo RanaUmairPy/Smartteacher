@@ -1,0 +1,23 @@
+# Django & REST Framework
+Django>=4.0
+djangorestframework>=3.14
+djangorestframework-simplejwt>=5.2.2
+django-cors-headers>=4.2.0
+
+# NLP & Semantic Embeddings
+sentence-transformers>=2.2.2
+transformers>=4.21.1
+torch>=1.12.0
+
+
+# Document Handling
+python-docx>=0.8.11
+chardet>=5.2.0
+
+# Web Server
+gunicorn>=21.2.0
+
+# Optional: If you re-enable PDF support later
+PyMuPDF==1.22.5
+
+# Render-compatible if using Python 3.10+
