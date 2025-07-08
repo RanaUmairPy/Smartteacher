@@ -13,7 +13,8 @@ from django.conf import settings
 from difflib import SequenceMatcher
 
 #model = SentenceTransformer('all-MiniLM-L6-v2')  # or any of the models above
-model = SentenceTransformer('stsb-roberta-large')
+#model = SentenceTransformer('stsb-roberta-large')
+model = SentenceTransformer('all-mpnet-base-v2')  # ~420MB but ~85 STS accuracy
 
 def extract_text(file_path):
     try:
