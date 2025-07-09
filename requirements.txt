@@ -19,5 +19,7 @@ gunicorn>=21.2.0
 
 # Optional: If you re-enable PDF support later
 PyMuPDF==1.22.5
-
+pytz                     # Timezone handling, usually a Django dependency
+sqlparse                 # SQL parsing for Django
+csv  
 # Render-compatible if using Python 3.10+
