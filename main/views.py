@@ -1,3 +1,6 @@
+import csv
+from io import StringIO
+from django.http import HttpResponse
 from rest_framework import viewsets, permissions
 from .models import ClassRoom, Assignment, Submission
 from .serizalizer import ClassRoomSerializer, AssignmentSerializer, SubmissionSerializer
@@ -89,7 +92,7 @@ def check_plagiarism(student_embeddings, submission_id_to_student):
 class ClassRoomViewSet(viewsets.ModelViewSet):
     queryset = ClassRoom.objects.all()
     serializer_class = ClassRoomSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    #permission_classes = [permissions.IsAuthenticated]
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
     @action(detail=False, methods=['post'], url_path='join')
@@ -171,6 +174,78 @@ class ClassRoomViewSet(viewsets.ModelViewSet):
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             except Assignment.DoesNotExist:
                 return Response({"error": "Assignment not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+    @action(detail=True, methods=['get'], url_path='generate-result-csv')
+    def generate_result_csv(self, request, pk=None):
+            try:
+                # Fetch the classroom
+                classroom = ClassRoom.objects.get(id=pk)
+            except ClassRoom.DoesNotExist:
+                return Response({"error": "Classroom not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Only the teacher (creator) can generate the CSV
+            if request.user != classroom.created_by:
+                return Response({"error": "Only the teacher can generate results."}, status=status.HTTP_403_FORBIDDEN)
+
+            # Fetch all students who have submitted assignments in this classroom
+            students = classroom.students.filter(
+                submission__assignment__classroom=classroom
+            ).distinct()
+
+            if not students.exists():
+                return Response({"error": "No submissions found for this classroom."}, status=status.HTTP_404_NOT_FOUND)
+
+            # Fetch all assignments for the classroom
+            assignments = Assignment.objects.filter(classroom=classroom).order_by('id')
+
+            # Create CSV in memory
+            output = StringIO()
+            writer = csv.writer(output)
+
+            # Write header: Student Name, Assignment 1, Assignment 2, etc.
+            headers = ['Student Name'] + [f"{assignment.title} (Max: {assignment.max_marks})" for assignment in assignments]
+            writer.writerow(headers)
+
+            # Write data rows
+            for student in students:
+                row = [student.username]  # Adjust to student.name if applicable
+                for assignment in assignments:
+                    # Fetch the latest submission for this student and assignment
+                    submission = Submission.objects.filter(
+                        student=student,
+                        assignment=assignment
+                    ).order_by('-id').first()
+                    
+                    if submission:
+                        # Get marks and teacher_marks, default to 0 if None
+                        marks = submission.marks if submission.marks is not None else 0
+                        teacher_marks = submission.teacher_marks if submission.teacher_marks is not None else 0
+                        
+                        # Calculate average
+                        if marks == 0 and teacher_marks == 0:
+                            avg_marks = 0
+                        elif marks == 0:
+                            avg_marks = teacher_marks  # Use teacher_marks if marks is 0/None
+                        elif teacher_marks == 0:
+                            avg_marks = marks  # Use marks if teacher_marks is 0/None
+                        else:
+                            avg_marks = round((marks + teacher_marks) / 2, 2)  # Average, rounded to 2 decimal places
+                    else:
+                        avg_marks = 0  # No submission, default to 0
+                    
+                    row.append(avg_marks)
+                writer.writerow(row)
+
+            # Prepare response with CSV file
+            response = HttpResponse(
+                content_type='text/csv',
+                headers={'Content-Disposition': f'attachment; filename="classroom_{classroom.code}_results.csv"'},
+            )
+            response.write(output.getvalue())
+            output.close()
+
+            return response
+            
 
 class AssignmentViewSet(viewsets.ModelViewSet):
     queryset = Assignment.objects.all()
