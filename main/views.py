@@ -14,10 +14,21 @@ from sentence_transformers import SentenceTransformer, util
 import chardet
 from django.conf import settings
 from difflib import SequenceMatcher
+from django.conf import settings
+#from user.models import CustomUser as u1 # Assuming you have a custom user model
+
+from django.conf import settings
+from django.db import models
+from django.contrib.auth import get_user_model
+
+u1 = get_user_model()
+u11 = settings.AUTH_USER_MODEL 
+
 
 #model = SentenceTransformer('all-MiniLM-L6-v2')  # or any of the models above
 #model = SentenceTransformer('stsb-roberta-large')
 model = SentenceTransformer('all-mpnet-base-v2')  # ~420MB but ~85 STS accuracy
+#model = SentenceTransformer('D:\Project\stsb-roberta-large1')  # ~60MB but ~80 STS accuracy
 
 def extract_text(file_path):
     try:
@@ -93,6 +104,59 @@ class ClassRoomViewSet(viewsets.ModelViewSet):
     queryset = ClassRoom.objects.all()
     serializer_class = ClassRoomSerializer
     #permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=True, methods=['get'], url_path='download-results-csv')
+    def download_results_csv(self, request, pk=None):
+        try:
+            # Fetch the classroom
+            classroom = ClassRoom.objects.get(id=pk)
+        except ClassRoom.DoesNotExist:
+            return Response({"error": "Classroom not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Only the teacher (creator) can generate the CSV
+        if request.user != classroom.created_by:
+            return Response({"error": "Only the teacher can download results."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Fetch all students enrolled in the classroom
+        students = classroom.students.all()
+        assignments = Assignment.objects.filter(classroom=classroom).order_by('id')
+
+        if not students.exists():
+            return Response({"error": "No students enrolled in this classroom."}, status=status.HTTP_404_NOT_FOUND)
+        if not assignments.exists():
+            return Response({"error": "No assignments found in this classroom."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Create CSV in memory
+        output = StringIO()
+        writer = csv.writer(output)
+
+        # Write header
+        headers = ['Student Name', 'Student Roll_number'] + [assignment.title for assignment in assignments]
+        writer.writerow(headers)
+
+        # Write data rows for each student
+        for student in students:
+            row = [student.username, student.roll_number]
+            for assignment in assignments:
+                submission = Submission.objects.filter(student=student, assignment=assignment).order_by('-submitted_at').first()
+                if submission:
+                    marks = submission.marks if submission.marks is not None else 0
+                    teacher_marks = submission.teacher_marks if submission.teacher_marks is not None else 0
+                    avg_marks = round((marks + teacher_marks) / 2, 2) if marks > 0 and teacher_marks > 0 else marks or teacher_marks
+                    row.append(avg_marks)
+                else:
+                    row.append(0)  # No submission, default to 0
+            writer.writerow(row)
+
+        # Prepare response for downloadable CSV
+        response = HttpResponse(
+            content_type='text/csv',
+            headers={'Content-Disposition': f'attachment; filename="classroom_{classroom.code}_results.csv"'},
+        )
+        response.write(output.getvalue().encode('utf-8'))
+        output.close()
+
+        return response
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
     @action(detail=False, methods=['post'], url_path='join')
