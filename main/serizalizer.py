@@ -48,3 +48,13 @@ class SubmissionSerializer(serializers.ModelSerializer):
             'submitted_at', 'marks', 'feedback','teacher_marks'
         ]
         #read_only_fields = ['submitted_at', 'marks', 'feedback']
+
+
+
+# serializers.py
+from .models import Notification
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'title', 'body', 'sent_time', 'read', 'classroom_id', 'assignment_id', 'type']

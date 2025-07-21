@@ -22,6 +22,11 @@ from .notification import send_assignment_notification
 from django.conf import settings
 from django.db import models
 from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import Notification
+from .serizalizer import NotificationSerializer
 
 u1 = get_user_model()
 u11 = settings.AUTH_USER_MODEL 
@@ -486,3 +491,16 @@ class Update(viewsets.ModelViewSet):
             return Response({"error": f"Invalid data format: {e}"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": f"Error updating submission: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+#notification
+
+# views.py
+
+class NotificationListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        notifications = Notification.objects.filter(user=request.user).order_by('-sent_time')
+        serializer = NotificationSerializer(notifications, many=True)
+        return Response(serializer.data)

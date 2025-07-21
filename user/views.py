@@ -60,3 +60,16 @@ class StorePlayerIdView(APIView):
             return Response({"message": "Player ID stored successfully"}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ClearPlayerIdView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            user = request.user
+            user.onesignal_player_id = None
+            user.save()
+            return Response({"message": "Player ID cleared successfully"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": f"Error clearing player ID: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)

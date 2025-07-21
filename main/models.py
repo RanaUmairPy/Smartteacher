@@ -68,3 +68,21 @@ class FacultyCourse(models.Model):
 
     def __str__(self):
         return f"{self.course_code} - {self.course_title}"
+
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    body = models.TextField()
+    sent_time = models.DateTimeField(auto_now_add=True)
+    read = models.BooleanField(default=False)
+    classroom_id = models.CharField(max_length=36, null=True, blank=True)  # UUID as string
+    assignment_id = models.CharField(max_length=36, null=True, blank=True)  # UUID as string
+    type = models.CharField(max_length=50, default='new_assignment')
+
+    class Meta:
+        ordering = ['-sent_time']
+
+    def __str__(self):
+        return f"{self.title} for {self.user.username}"
