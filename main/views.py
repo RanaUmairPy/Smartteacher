@@ -34,8 +34,8 @@ u11 = settings.AUTH_USER_MODEL
 
 #model = SentenceTransformer('all-MiniLM-L6-v2')  # or any of the models above
 #model = SentenceTransformer('stsb-roberta-large')
-#model = SentenceTransformer('all-mpnet-base-v2')  # ~420MB but ~85 STS accuracy
-model = SentenceTransformer('D:\Project\stsb-roberta-large1')  # ~60MB but ~80 STS accuracy
+model = SentenceTransformer('all-mpnet-base-v2')  # ~420MB but ~85 STS accuracy
+#model = SentenceTransformer('D:\Project\stsb-roberta-large1')  # ~60MB but ~80 STS accuracy
 
 def extract_text(file_path):
     try:
