@@ -12,7 +12,7 @@ from rest_framework import status
 import os
 import fitz
 import docx
-from sentence_transformers import SentenceTransformer, util
+#from sentence_transformers import SentenceTransformer, util
 import chardet
 from django.conf import settings
 from difflib import SequenceMatcher
@@ -32,10 +32,19 @@ u1 = get_user_model()
 u11 = settings.AUTH_USER_MODEL 
 
 
-model = SentenceTransformer('all-MiniLM-L6-v2')  # or any of the models above
+#model = SentenceTransformer('all-MiniLM-L6-v2')  # or any of the models above
 #model = SentenceTransformer('stsb-roberta-large')
 #model = SentenceTransformer('all-mpnet-base-v2')  # ~420MB but ~85 STS accuracy
 #model = SentenceTransformer('D:\Project\stsb-roberta-large1')  # ~60MB but ~80 STS accuracy
+
+
+
+def get_model():
+    from sentence_transformers import SentenceTransformer, util
+    model = SentenceTransformer('all-MiniLM-L6-v2')  # switch to local path if stored
+    return model, util
+
+
 
 def extract_text(file_path):
     try:
@@ -62,8 +71,9 @@ def evaluate_submission(student_text, correct_embedding, min_words, required_key
         if word_count < min_words:
             return 0, f"0% semantically similar (Too short: {word_count} words < {min_words})"
 
-        
+        model, util = get_model()
         student_embedding = model.encode(student_text, convert_to_tensor=True)
+        
         similarity = util.cos_sim(correct_embedding, student_embedding).item()
 
     
