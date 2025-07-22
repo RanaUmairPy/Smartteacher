@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import CustomUser  # Assuming you have a CustomUser model defined
-from .utils import send_otp_email  # Assuming you have a utility function to send OTP emails
+from .utils import send_otp_email,send_success_email  # Assuming you have a utility function to send OTP emails
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
@@ -33,6 +33,7 @@ class VerifyOTPView(generics.GenericAPIView):
             user = CustomUser.objects.get(email=email)
             user.is_verified = True
             user.save()
+            send_success_email(user.email, user.username)
             return Response({"message": "Email verified successfully"}, status=status.HTTP_200_OK)
         except CustomUser.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
